@@ -1,3 +1,4 @@
+#!usr/bin/env python3
 import os, sys, traceback
 #		ASProL - Arbitrarily Simple PROgramming Language
 #		Version 0.1
