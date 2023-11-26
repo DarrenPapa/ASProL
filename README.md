@@ -21,5 +21,5 @@
 
   ASProL is an esoteric programming language since its syntax is bizarre
   it comes from CASProL actualy, I just reused some code from CASProL and
-  tinkeredwwith it to come up with ASProL. Please use ASProL well :)
+  tinkered with it to come up with ASProL. Please use ASProL well :)
 </p>
