@@ -1,4 +1,4 @@
-#!usr/bin/env python3
+#!/usr/bin/python
 import os, sys, traceback
 #		ASProL - Arbitrarily Simple PROgramming Language
 #		Version 0.1
@@ -24,6 +24,8 @@ class inter:
 		self._maxc = 1000 # max calls without returning
 		self._iters = 0 # keep track of simultaneous calls without returning
 		self._togled = False
+		self._startv = {}
+		self._ptrs_v = {}
 	def allocate_mem(self):
 		for pos,val in enumerate(self._memory):
 			if pos not in self._allocated and val == 0:
@@ -117,13 +119,15 @@ class inter:
 		# this can also be useful so that subroutine decleration arent at the top of the script
 		if "_start-data_" in prog:
 			self.p = prog.index("_start-data_")+1
+		self._calls = []
 		while self.p < len(prog):
 			line = prog[self.p]
 			if line == '':
 				self.p += 1
 				continue
 			ins, *args = line.split()
-			args = self._values(list(map(lambda x:x.strip().replace('\\n','\n').replace('¬¶¬',','),' '.join(args).replace('\\,','¬¶¬').split(',') if args else [])))
+			pargs = tuple(map(lambda x:x.strip().replace('\\n','\n').replace('¬¶¬',','),' '.join(args).replace('\\,','¬¶¬').split(',') if args else []))
+			args = self._values(list(pargs))
 			argc = len(args)
 			## Memory operations
 			if ins == 'add' and argc == 3:
@@ -203,7 +207,22 @@ class inter:
 				destin = args[1]
 				self.new_string(destin,self.get_str(args[0]))
 			## Vectors (ints/floats only)
-			elif ins == '%add_'
+			elif ins == '%new_vector' and argc == 2:
+				self._startv[args[0]] = args[1]
+				self._ptrs_v[args[0]] = 0
+			elif ins == '%append_vector' and argc == 2:
+				if not args[0] in self._startv and args[0] in self._ptrs_v:
+					self.err('[Error]: Vector doesnt exist or data is missing!')
+				self.write_mem(self._startv[args[0]]+self._ptrs_v[args[0]],args[1])
+				self._ptrs_v[args[0]] += 1
+			elif ins == '%pop_vector' and argc == 2:
+				if not args[1] in self._startv and args[1] in self._ptrs_v:
+					self.err('[Error]: Vector doesnt exist or data is missing!')
+				self._ptrs_v[args[1]] -= 1
+				if self._ptrs_v[args[1]] < 0:
+					self.err('[Error]: Underflow!')
+				self.write_mem(args[0],self.get_mem(self._startv[args[1]]+self._ptrs_v[args[1]]))
+				self.write_mem(self._startv[args[1]]+self._ptrs_v[args[1]],0)
 			## Subroutines
 			elif ins == '!sub' and argc == 1:
 				self._jtable[args[0]] = self.p
@@ -231,14 +250,6 @@ class inter:
 				for arg in args:
 					print(chr(arg),end='')
 			elif ins == "%put_value":
-				args = list(args)
-				for pos,arg in enumerate(args):
-					if arg in self._ptrs:
-						args[pos] = f'POINTER: {arg} -> {self._ptrs.get(arg)}'+(': [ALLOCATED]' if self._ptrs.get(arg) in self._allocated else '')
-					elif arg.isidentifier() and arg not in self._ptrs:
-						args[pos] = f'UNDECLARED POINTER: {arg}'
-					else:
-						continue
 				print(*args)
 			elif ins == 'ipt' and argc == 1:
 				start = args[0]
@@ -258,6 +269,7 @@ class inter:
 							self._memory[int(addr)] = int(value)
 						except ValueError:
 							self._memory[int(addr)] = float(value)
+				del file, line, addr, value
 			elif ins == "|save_mem" and argc == 1:
 				mem = ''
 				for pos,value in enumerate(self._memory):
@@ -265,9 +277,10 @@ class inter:
 						continue
 					mem += f'{pos} {value}\n'
 				open(args[0],'w').write(mem)
+				del mem, pos, value
 			elif ins == "|registers" and argc == 0 and self._togled == False:
 				self.switch_mem()
-			elif uns == "|memory" and argc == 0 and self._togled == True:
+			elif ins == "|memory" and argc == 0 and self._togled == True:
 				self.switch_mem()
 			## Memory
 			elif ins == "!pointer" and argc == 2:
@@ -335,8 +348,16 @@ class inter:
 			else:
 				self.err('[Error]: Invalid instruction: '+ins)
 			self.p += 1
+			self._calls.append((ins,(*args,),(*pargs,)))
 	def err(self,msg=''):
-		sys.exit(msg+f'\nAt line {(self.p+1 if type(self.p) == int else self.p)}')
+		print('Most recent call last:')
+		for pos,[ins,args,pargs] in enumerate(self._calls):
+			if args != tuple() and pargs != tuple():
+				print(f'Instruction [{str(pos).zfill(6)}]: {ins}\n   Unprocessed arguments: {pargs}\n     Processed arguments: {args}')
+			else:
+				print(f'Instruction [{str(pos).zfill(6)}]: {ins}\n     No arguments')
+		print('======== [ Details ] ========\n'+msg+f'\nAt line {(self.p+1 if type(self.p) == int else self.p)}')
+		sys.exit()
 	def exit(self,msg=''):
 		sys.exit(msg)
 if len(sys.argv) < 2:
