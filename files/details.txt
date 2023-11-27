@@ -1,1 +1,49 @@
+ASProL - Details
 
+  ASProL simulates a low level environment without the dangers of an actual one. ASProL is an
+esoteric programming language, it's purpose is to train to user in managing memory. Don't worry
+it doesnt have errors when you forget to free memory at the end of the program, it's esoteric
+because it uses an unusual syntax, similar to assembly but still unusual. So if you're confused
+by normal programming languages, DO NOT USE THIS ONE! Now use ASProL well if you can :)
+
+ASProL's specs:
+  - Memory tape: 32,000 bytes (actual size unknow due to pythons automatic allocation)
+  - Registers: 32 bytes (actual size unknow due to pythons automatic allocation)
+  - Pointers
+  - Allocation
+  - Strings
+  - Integers
+  - Floats
+
+Author: Darren Chase Papa
+Written in Python 3.1
+Current version v0.1-a
+
+Software used:
+Pydroid3
+  - Python 3.11
+Termux
+  - vim
+  - git
+  - g
+  - Python 3.11
+
+ASProL - Features
+
+Memory management:
+  - Pointers
+  - Memory Allocation
+
+Advance memory management:
+  - Saving and loading disc files: snapshots of the interpreters current memory tape,
+  these files are saved at the interpreter's local directory
+  - Switching between registers and memory
+
+Strings:
+  - Copying
+  - Concatination
+  - Comparisons
+  - Operations: such as sizeof_str
+
+Operations:
+  - Arithmetic operations: add, sub, mul, div and fdiv (floor division/integer division)
