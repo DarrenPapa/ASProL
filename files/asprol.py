@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import os, sys, traceback
 from sys import exit # for pyinstaller
+from time import time
 os.chdir(os.getcwd())
 LOCALDIR = os.getcwd()
 del sys.path[0]
@@ -162,10 +163,10 @@ class inter:
 				self.write_mem(args[2],1 if args[0] != args[1] else 0)
 			## Branching / jumps
 			elif ins == 'jiz' and argc == 2:
-				self.p = args[1]-1 if args[0] == 0 else self.p
+				self.p = args[1]-1 if args[0] == 0 else self.p+1
 				continue
 			elif ins == 'jnz' and argc == 2:
-				self.p = args[1]-1 if args[0] != 0 else self.p
+				self.p = args[1]-1 if args[0] != 0 else self.p+1
 				continue
 			elif ins == 'jmp' and argc == 1:
 				self.p = args[0]-1
@@ -258,7 +259,7 @@ class inter:
 			## Advance memory manipulation
 			elif ins == "load_mem" and argc == 1:
 				self._memory = [0]*32000
-				if os.isfile(args[0]):
+				if os.path.isfile(args[0]):
 					file=open(args[0],'r').read()
 					for line in file.split('\n'):
 						if line == '':
@@ -268,7 +269,6 @@ class inter:
 							self._memory[int(addr)] = int(value)
 						except ValueError:
 							self._memory[int(addr)] = float(value)
-				del file, line, addr, value
 			elif ins == "save_mem" and argc == 1:
 				mem = ''
 				for pos,value in enumerate(self._memory):
@@ -326,8 +326,9 @@ class inter:
 			elif ins == "purge_all":
 				self.__init__()
 			## Miscalleneous
-			elif ins == 'hlt' and argc == 0:
-				exit()
+			elif ins == 'hlt':
+				sys.exit()
+			elif ins == 'check_file' and argc == 2: self.write_mem(args[1],1) if os.path.isfile(args[0]) else self.write_mem(args[1],0)
 			elif ins.startswith(';['):
 				while self.p < len(prog):
 					if prog[self.p] == '];':
@@ -335,6 +336,9 @@ class inter:
 					self.p += 1
 				else:
 					self.err('[Error]: Multi-line comment wasnt closed!')
+			elif ins == "#!/usr/bin/asprol":
+				self.p += 1
+				continue
 			## Redirecting
 			elif ins == '_end-data_':
 				self.p = 0
@@ -379,7 +383,10 @@ if not os.path.isfile(sys.argv[1]):
 	exit('[Error]: Argument one must be file!')
 ok = inter()
 try:
+	start = time()
 	ok.run(open(sys.argv[1],'r').read())
+	if "--time" in sys.argv or "-t" in sys.argv:
+		print(f"Time elapsed: {time()-start:.6f}s")
 except SystemExit:
 	sys.exit()
 except KeyboardInterrupt:
