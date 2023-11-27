@@ -1,5 +1,9 @@
 #!/usr/bin/python
 import os, sys, traceback
+os.chdir(os.getcwd())
+LOCALDIR = os.getcwd()
+del sys.path[0]
+sys.path[0] = LOCALDIR
 #		ASProL - Arbitrarily Simple PROgramming Language
 #		Version 0.1
 #		written by Darren Chase Papa
@@ -221,11 +225,11 @@ class inter:
 			elif ins == 'subroutine' and argc == 1:
 				self._jtable[args[0]] = self.p
 				while self.p < len(prog):
-					if prog[self.p] == '!ret':
+					if prog[self.p] == 'return':
 						break
 					self.p += 1
 				else:
-					self.err('[Error]: Subroutine comment wasnt closed!')
+					self.err('[Error]: Subroutine wasnt closed with `return`!')
 			elif ins == 'return' and argc == 0:
 				if self._cstack == []:
 					self.err('[Error]: Invalid return!')
@@ -356,11 +360,16 @@ if len(sys.argv) < 2:
 	kk = inter()
 	kk.exit = lambda x:print(x)
 	kk.err = kk.exit
-	print('ASProL - REPL [0.1] Might be slower due to argument handling.')
+	print('ASProL - REPL [0.1] Might be slower due to the REPL\'s argument handling.')
+	print(f'Local directory: "{LOCALDIR}"')
 	while True:
 		act = input('Code >> ')
 		if act == "exit":
 			exit('[Done]')
+		elif act.startswith("term:"):
+			os.system(act[5:])
+		elif act == "const:localdir":
+			print(LOCALDIR)
 		elif act in kk._ptrs:
 			print(f'[REPL]  POINTER: {act} -> {kk._ptrs[act]}'+(': [ALLOCATED]' if kk._ptrs[act] in kk._allocated else ''))
 		else:
