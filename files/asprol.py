@@ -5,13 +5,7 @@ import os, sys, traceback
 #		written by Darren Chase Papa
 #		a very simple and complex esoteric programming language
 #		with memory handling with the memory array
-#		Instruction types:
-#			suffix `%` implementable in raw ASProL code
-#			suffix `!` impossible to implement in ASProL without changing the interpreter
-#			suffix `@` meant to modify the class (the current inter instance)
-#			suffix `?` hot stuff (not fully supported)
-#			suffix `|` advance memory manipulation
-#			no suffix  normal instructions (primary instructions similar to the ones with the suffix `!`)
+#		Instruction types are hard :)
 class inter:
 	def __init__(self):
 		self._memory = [0]*32000
@@ -57,23 +51,23 @@ class inter:
 		self._togled = not self._togled
 	def _values(self,args):
 		for pos,arg in enumerate(args):
-			if arg.startswith('%') and arg[1:].isdigit():                                                            # Memory reference
+			if arg.startswith('%') and arg[1:].isdigit():															# Memory reference
 				args[pos] = self.get_mem(int(arg[1:]))
-			elif arg.count('-') <= 1 and arg.replace('-','').isdigit():                                              # Integer
+			elif arg.count('-') <= 1 and arg.replace('-','').isdigit():											  # Integer
 				args[pos] = int(arg)
-			elif arg.count('-') <= 1 and arg.count('.') <= 1 and arg.replace('-','').replace('.','').isdigit():      # Float
+			elif arg.count('-') <= 1 and arg.count('.') <= 1 and arg.replace('-','').replace('.','').isdigit():	  # Float
 				args[pos] = float(arg)
-			elif arg.startswith('*') and arg[1:] in self._ptrs:                                                      # Pointer's value
+			elif arg.startswith('*') and arg[1:] in self._ptrs:													  # Pointer's value
 				args[pos] = self.get_mem(self._ptrs[arg[1:]])
-			elif arg == '~allocate':                                                                                 # Implicit allocation (no control over address)
+			elif arg == '~allocate':																				 # Implicit allocation (no control over address)
 				args[pos] = self.allocate_mem()
-			elif arg.startswith('&') and arg[1:] in self._ptrs:                                                      # Pointer reference
+			elif arg.startswith('&') and arg[1:] in self._ptrs:													  # Pointer reference
 				args[pos] = arg[1:]
-			elif arg in self._ptrs:                                                                                  # Pointer address
+			elif arg in self._ptrs:																				  # Pointer address
 				args[pos] = self._ptrs[arg]
-			elif arg.isidentifier():                                                                                 # Unknown identifier (ignored)
+			elif arg.isidentifier():																				 # Unknown identifier (ignored)
 				pass
-			elif arg.startswith('"') and arg.endswith('"'):                                                          # Strings [not used by anything (yet)]
+			elif arg.startswith('"') and arg.endswith('"'):														  # Strings [not used by anything (yet)]
 				args[pos] = arg[1:-1]
 			else:
 				self.err('[Error]: Encountered invalid argument: '+arg)
@@ -172,11 +166,11 @@ class inter:
 				self.p = args[0]-1
 				continue
 			## Strings
-			elif ins == "%sizeof_str" and argc == 2:
+			elif ins == "sizeof_str" and argc == 2:
 				self.write_mem(args[1],self.get_str_len(args[0]))
-			elif ins == "%new_string" and argc == 2:
+			elif ins == "new_string" and argc == 2:
 				self.new_str(args[0],args[1])
-			elif ins == "%put_string" and argc == 1:
+			elif ins == "put_string" and argc == 1:
 				k = ord('×')
 				for char in self._memory[args[0]:]:
 					if char == k:
@@ -184,38 +178,38 @@ class inter:
 					print(chr(char),end='')
 				else:
 					self.err('[Error]: String never ended with terminator `×`:\nMight be a memory leak.')
-			elif ins == "%str-eq" and argc == 3:
+			elif ins == "str-eq" and argc == 3:
 				string0 = self.get_str(args[0])
 				string1 = self.get_str(args[1])
 				if string0 == string1:
 					self.write_mem(args[2],1)
 				else:
 					self.write_mem(args[2],0)
-			elif ins == "%str-ne" and argc == 3:
+			elif ins == "str-ne" and argc == 3:
 				string0 = self.get_str(args[0])
 				string1 = self.get_str(args[1])
 				if string0 != string1:
 					self.write_mem(args[2],1)
 				else:
 					self.write_mem(args[2],0)
-			elif ins == "%into_int" and argc == 1:
+			elif ins == "into_int" and argc == 1:
 				string = self.get_str(args[0])
 				self.clear_str(args[0])
 				self.write_mem(args[0],int(string))
-			elif ins == "%str-copy" and argc == 2:
+			elif ins == "str-copy" and argc == 2:
 				source = args[0]
 				destin = args[1]
 				self.new_string(destin,self.get_str(args[0]))
 			## Vectors (ints/floats only)
-			elif ins == '%new_vector' and argc == 2:
+			elif ins == 'new_vector' and argc == 2:
 				self._startv[args[0]] = args[1]
 				self._ptrs_v[args[0]] = 0
-			elif ins == '%append_vector' and argc == 2:
+			elif ins == 'append_vector' and argc == 2:
 				if not args[0] in self._startv and args[0] in self._ptrs_v:
 					self.err('[Error]: Vector doesnt exist or data is missing!')
 				self.write_mem(self._startv[args[0]]+self._ptrs_v[args[0]],args[1])
 				self._ptrs_v[args[0]] += 1
-			elif ins == '%pop_vector' and argc == 2:
+			elif ins == 'pop_vector' and argc == 2:
 				if not args[1] in self._startv and args[1] in self._ptrs_v:
 					self.err('[Error]: Vector doesnt exist or data is missing!')
 				self._ptrs_v[args[1]] -= 1
@@ -224,7 +218,7 @@ class inter:
 				self.write_mem(args[0],self.get_mem(self._startv[args[1]]+self._ptrs_v[args[1]]))
 				self.write_mem(self._startv[args[1]]+self._ptrs_v[args[1]],0)
 			## Subroutines
-			elif ins == '!sub' and argc == 1:
+			elif ins == 'subroutine' and argc == 1:
 				self._jtable[args[0]] = self.p
 				while self.p < len(prog):
 					if prog[self.p] == '!ret':
@@ -232,12 +226,12 @@ class inter:
 					self.p += 1
 				else:
 					self.err('[Error]: Subroutine comment wasnt closed!')
-			elif ins == '!ret' and argc == 0:
+			elif ins == 'return' and argc == 0:
 				if self._cstack == []:
 					self.err('[Error]: Invalid return!')
 				self._iters = 0
 				self.p = self._cstack.pop()
-			elif ins == '!gosub' and argc == 1:
+			elif ins == 'gosub' and argc == 1:
 				if self._iters > self._maxc:
 					self.err(f'[CRIT ERROR]: RECURSION ERROR IN SUBROUTINE: {args[0]}')
 				if args[0] not in self._jtable:
@@ -249,7 +243,7 @@ class inter:
 			elif ins == 'put' and argc != 0:
 				for arg in args:
 					print(chr(arg),end='')
-			elif ins == "%put_value":
+			elif ins == "put_value":
 				print(*args)
 			elif ins == 'ipt' and argc == 1:
 				start = args[0]
@@ -257,7 +251,7 @@ class inter:
 				for pos,char in enumerate(chars+'×'):
 					self.write_mem(start+pos,ord(char))
 			## Advance memory manipulation
-			elif ins == "|load_mem" and argc == 1:
+			elif ins == "load_mem" and argc == 1:
 				self._memory = [0]*32000
 				if os.isfile(args[0]):
 					file=open(args[0],'r').read()
@@ -270,7 +264,7 @@ class inter:
 						except ValueError:
 							self._memory[int(addr)] = float(value)
 				del file, line, addr, value
-			elif ins == "|save_mem" and argc == 1:
+			elif ins == "save_mem" and argc == 1:
 				mem = ''
 				for pos,value in enumerate(self._memory):
 					if value == 0:
@@ -278,26 +272,26 @@ class inter:
 					mem += f'{pos} {value}\n'
 				open(args[0],'w').write(mem)
 				del mem, pos, value
-			elif ins == "|registers" and argc == 0 and self._togled == False:
+			elif ins == "register_mode" and argc == 0 and self._togled == False:
 				self.switch_mem()
-			elif ins == "|memory" and argc == 0 and self._togled == True:
+			elif ins == "memory_mode" and argc == 0 and self._togled == True:
 				self.switch_mem()
 			## Memory
-			elif ins == "!pointer" and argc == 2:
+			elif ins == "pointer" and argc == 2:
 				self._ptrs[args[0]] = args[1]
-			elif ins == '!allocate' and argc == 1:     # Explicit allocation (control over memory address to allocate)
+			elif ins == 'allocate' and argc == 1:	 # Explicit allocation (control over memory address to allocate)
 				if args[0] not in self._allocated:
 					self._allocated.add(args[0])
 				else:
 					self.err(f'[Error]: Cant allocated allocated memory!')
-			elif ins == "%malloc" and argc == 3:       # Also explicit allocation
+			elif ins == "malloc" and argc == 3:	   # Also explicit allocation
 				self._ptrs[args[2]] = args[0]
 				self._size[args[2]] = args[1]
 				for pos in range(args[1]+1):
 					if args[0]+pos in self._allocated:
 						self.err('[Error]: Can not allocate allocated memory!\nOverlap in allocation!')
 					self._allocated.add(args[0]+pos)
-			elif ins == "%auto_malloc" and argc == 2: # Implicit allocation (the starting address cannot be manually controlled)
+			elif ins == "auto_malloc" and argc == 2: # Implicit allocation (the starting address cannot be manually controlled)
 				start = self.allocate_mem()
 				self._ptrs[args[1]] = start
 				self._size[args[1]] = args[0]
@@ -305,30 +299,27 @@ class inter:
 					if start+pos in self._allocated:
 						self.err('[Error]: Can not allocate allocated memory!\nOverlap in allocation!')
 					self._allocated.add(start+pos)
-			elif ins == "%free_malloc" and argc == 1: # Used for chunks of memory allocated by !malloc or %auto-malloc
+			elif ins == "free_malloc" and argc == 1: # Used for chunks of memory allocated by !malloc or %auto-malloc
 				start = self._ptrs.get(args[0])
 				size = self._size.get(args[0])
 				for pos in range(size):
 					if start+pos not in self._allocated:
 						self.err('[Error]: Tried to free unallocated memory:\nMemory mught have been corrupted or fragmented!')
 					self._allocated.remove(start+pos)
-			elif ins == "!free" and argc == 1:        # Used to free singular memory addresses allocated by !allocate or by assigning ~allocate to a pointer
+			elif ins == "free" and argc == 1:		# Used to free singular memory addresses allocated by !allocate or by assigning ~allocate to a pointer
 				if args[0] in self._allocated:
 					self._allocated.remove(args[0])
 				else:
 					self.err('[Error]: Tried to free unallocated memory.')
-			elif ins == "!forget" and argc == 1:
+			elif ins == "forget" and argc == 1:
 				if args[0] in self._ptrs:
 					self._ptrs.pop(args[0])
 				else:
 					self.err('[Error]: Tried to forget undeclared pointer.')
-			elif ins == '@purge_memory' and argc == 0:
+			elif ins == 'purge_memory' and argc == 0:
 				self._memory = [0]*32000
-			elif ins == "@purge_all":
-				self._memory = [0]*32000
-				self._ptrs = {}
-				self._allocated = set()
-				self._size = {}
+			elif ins == "purge_all":
+				self.__init__()
 			## Miscalleneous
 			elif ins == 'hlt' and argc == 0:
 				exit()
@@ -350,12 +341,13 @@ class inter:
 			self.p += 1
 			self._calls.append((ins,(*args,),(*pargs,)))
 	def err(self,msg=''):
-		print('Most recent call last:')
-		for pos,[ins,args,pargs] in enumerate(self._calls):
-			if args != tuple() and pargs != tuple():
-				print(f'Instruction [{str(pos).zfill(6)}]: {ins}\n   Unprocessed arguments: {pargs}\n     Processed arguments: {args}')
-			else:
-				print(f'Instruction [{str(pos).zfill(6)}]: {ins}\n     No arguments')
+		if self._calls:
+			print('Most recent call last:')
+			for pos,[ins,args,pargs] in enumerate(self._calls):
+				if args != tuple() and pargs != tuple():
+					print(f'Instruction [{str(pos).zfill(6)}]: {ins}\n   Unprocessed arguments: {pargs}\n	 Processed arguments: {args}')
+				else:
+					print(f'Instruction [{str(pos).zfill(6)}]: {ins}\n	 No arguments')
 		print('======== [ Details ] ========\n'+msg+f'\nAt line {(self.p+1 if type(self.p) == int else self.p)}')
 		sys.exit()
 	def exit(self,msg=''):
