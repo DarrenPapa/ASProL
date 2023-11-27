@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import os, sys, traceback
+from sys import exit # for pyinstaller
 os.chdir(os.getcwd())
 LOCALDIR = os.getcwd()
 del sys.path[0]
