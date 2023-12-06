@@ -335,7 +335,7 @@ class inter:
 				size = self._size.get(args[0])
 				for pos in range(size):
 					if start+pos not in self._allocated:
-						self.err('[Error]: Tried to free unallocated memory:\nMemory mught have been corrupted or fragmented!')
+						self.err('[Error]: Tried to free unallocated memory:\nMemory might have been corrupted or fragmented!')
 					self._allocated.remove(start+pos)
 			elif ins == "free" and argc == 1:            # Used to free singular memory addresses allocated by !allocate or by assigning ~allocate to a pointer
 				if args[0] in self._allocated:

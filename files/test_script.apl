@@ -1,16 +1,10 @@
-;; This is a comment
-
-gosub "test"
-
+gosub "start-up"
 hlt
 
-_start-data_ ;; this is optional and its just for redirecting
+_start-data_
 
-;; subroutines are like functions but without arguments and return values, just goto's under the hood
-subroutine "test"
-	auto_malloc 20, string ;; allocate a chunk of memory starting at address 0 with the size of 20
-	new_string string, "Hello\, world!\n" ;; set a string at the allocated heap
-	put_string string ;; print the string
-return
+    auto_malloc 100, string
+    new_string string, "Hello\n"
+    put_string string
 
 _end-data_
