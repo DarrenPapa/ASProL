@@ -101,6 +101,7 @@ class inter:
 		return string_len
 	def new_str(self,address,string):
 		for pos,char in enumerate(string+'×'):
+            #print(pos,char)
 			self._memory[pos+address] = ord(char)
 	def clear_str(self,address):
 		k = ord('×')
@@ -126,14 +127,14 @@ class inter:
 				continue
 			ins, *args = line.split()
 			pargs = tuple(map(lambda x:x.strip().replace('\\n','\n').replace('¬¶¬',','),' '.join(args).replace('\\,','¬¶¬').split(',') if args else []))
-			args = self._values(list(pargs))
-			prog[line_num] = (ins,(*args,),(*pargs,))
+			prog[line_num] = (ins,(*pargs,))
 		while self.p < len(prog):
 			line = prog[self.p]
 			if line == tuple():
 				self.p += 1
 				continue
-			ins, args, pargs = list(line)
+			ins, pargs = list(line)
+			args = tuple(self._values(list(pargs)))
 			argc = len(args)
 			self._calls.append((ins,(*args,),(*pargs,)))
 			## Memory operations
@@ -335,7 +336,7 @@ class inter:
 				size = self._size.get(args[0])
 				for pos in range(size):
 					if start+pos not in self._allocated:
-						self.err('[Error]: Tried to free unallocated memory:\nMemory might have been corrupted or fragmented!')
+						self.err('[Error]: Tried to free unallocated memory:\nMemory mught have been corrupted or fragmented!')
 					self._allocated.remove(start+pos)
 			elif ins == "free" and argc == 1:            # Used to free singular memory addresses allocated by !allocate or by assigning ~allocate to a pointer
 				if args[0] in self._allocated:
