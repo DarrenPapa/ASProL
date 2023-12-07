@@ -25,7 +25,7 @@ Pydroid3
 Termux
   - vim
   - git
-  - g
+  - gh
   - Python 3.11
 
 ASProL - Features
